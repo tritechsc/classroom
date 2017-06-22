@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'lib/global_relay_id_backfill'
+require_relative '../global_relay_id_backfill'
 
 task assignment_global_relay_id_backfill: :environment do
   AssignmentRepo.find_in_batches(batch_size: 100) do |repos|
