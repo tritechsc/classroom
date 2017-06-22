@@ -45,6 +45,19 @@ describe GlobalRelayIdBackfill do
           expect(assignment_repo.reload.global_relay_id).to be_truthy
         end
       end
+
+      context 'when the users token is bad' do
+        before do
+          user.token = 'Potato'
+          user.save
+        end
+
+        it 'does not throw an exception' do
+          expect {
+            described_class.new(assignment_repo).backfill_global_relay_id
+          }.to_not raise_error
+        end
+      end
     end
 
     context 'when the assignment repo does not exist on GitHub' do
