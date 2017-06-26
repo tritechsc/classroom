@@ -53,9 +53,9 @@ describe GlobalRelayIdBackfill do
         end
 
         it 'does not throw an exception' do
-          expect {
+          expect do
             described_class.new(assignment_repo).backfill_global_relay_id
-          }.to_not raise_error
+          end.to_not raise_error
         end
       end
     end
@@ -64,9 +64,9 @@ describe GlobalRelayIdBackfill do
       let(:assignment_repo) { create(:assignment_repo, github_repo_id: -1, assignment: assignment, user: user) }
 
       it 'does not throw an exception' do
-        expect {
+        expect do
           described_class.new(assignment_repo).backfill_global_relay_id
-        }.to_not raise_error
+        end.to_not raise_error
       end
     end
   end
