@@ -1,0 +1,15 @@
+// From https://github.com/primer/primer-css/blob/454a8841469de50df97daf70e3cee370443a7d0f/modules/primer-box/lib/box.scss
+
+.Box {
+  border: $border-width $border-style #e3e3e3;
+}
+
+.Box-header {
+  background-color: #fbfbfb;
+  border-color: #e3e3e3;
+}
+
+.Box-title {
+  color: #5d666f;
+  font-weight: $font-weight-normal;
+}

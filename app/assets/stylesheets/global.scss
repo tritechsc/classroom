@@ -1,0 +1,36 @@
+// Global styles that apply to the entire application
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #f3f4f6;
+
+  &.site {
+    display: flex;
+    min-height: 100vh;
+    flex-direction: column;
+  }
+}
+
+main {
+  flex: 1;
+}
+
+a {
+  &.disabled {
+    pointer-events: none;
+    cursor: default;
+  }
+}
+
+hr {
+  border-bottom: 1px solid #e3e3e3;
+}
+
+.octicon {
+  display: inline-block;
+  vertical-align: middle;
+  fill: currentColor;
+}
