@@ -9,6 +9,18 @@ class GitHubRepository < GitHubResource
     end
   end
 
+  # Public: Add a label to a GitHub repository.
+  #
+  # label - The String name of the label.
+  # color -  (defaults to: "ffffff")  A color, in hex, without the leading #
+  #
+  # Returns a Hash of the label, or raises a GitHub::Error.
+  def add_label(label, color = 'ffffff', options = {})
+    GitHub::Errors.with_error_handling do
+      @client.add_label(full_name, label, color, options)
+    end
+  end
+
   def get_starter_code_from(source)
     GitHub::Errors.with_error_handling do
       options = {
