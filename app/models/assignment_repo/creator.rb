@@ -284,8 +284,13 @@ class AssignmentRepo
     def generate_issues(configs_repository, assignment_repository, tree_sha)
       GitHub::Errors.with_error_handling do
         configs_repository.tree(tree_sha).tree.each do |issue|
-          blob = configs_repository.blob(issue.sha)
-          assignment_repository.add_issue(blob.data['title'], blob.body)
+          blob   = configs_repository.blob(issue.sha)
+          issue  = assignment_repository.add_issue(blob.data['title'], blob.body)
+          labels = blob.data['labels']
+
+          if labels.present?
+            assignment_repository.add_labels_to_issue(issue.number, labels)
+          end
         end
       end
     end

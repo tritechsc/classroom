@@ -9,18 +9,6 @@ class GitHubRepository < GitHubResource
     end
   end
 
-  # Public: Add a label to a GitHub repository.
-  #
-  # label - The String name of the label.
-  # color -  (defaults to: "ffffff")  A color, in hex, without the leading #
-  #
-  # Returns a Hash of the label, or raises a GitHub::Error.
-  def add_label(label, color = 'ffffff', options = {})
-    GitHub::Errors.with_error_handling do
-      @client.add_label(full_name, label, color, options)
-    end
-  end
-
   def get_starter_code_from(source)
     GitHub::Errors.with_error_handling do
       options = {
@@ -49,6 +37,30 @@ class GitHubRepository < GitHubResource
     GitHub::Errors.with_error_handling do
       options[:accept] = Octokit::Preview::PREVIEW_TYPES[:repository_invitations]
       @client.invite_user_to_repository(@id, user, options)
+    end
+  end
+
+  # Public: Add a label to a GitHub repository.
+  #
+  # label - The String name of the label.
+  # color -  (defaults to: "ffffff")  A color, in hex, without the leading #
+  #
+  # Returns a Hash of the label, or raises a GitHub::Error.
+  def add_label(label, color = 'ffffff', options = {})
+    GitHub::Errors.with_error_handling do
+      @client.add_label(full_name, label, color, options)
+    end
+  end
+
+  # Public: Add a label(s) to an issue.
+  #
+  # number - Number ID of the issue
+  # labels - An array of labels to apply to this Issue
+  #
+  # Returns A list of the labels currently on the issue, or raises a GitHub::Error.
+  def add_labels_to_issue(number, labels)
+    GitHub::Errors.with_error_handling do
+      @client.add_labels_to_an_issue(full_name, number, labels)
     end
   end
 
