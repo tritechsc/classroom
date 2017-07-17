@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class ClassroomConfig
-  CONFIGURABLES = %w[issues].freeze
+  CONFIGURABLES = %w[issues labels].freeze
 
   attr_reader :github_repository
 
@@ -13,7 +13,7 @@ class ClassroomConfig
   def setup_repository(repo)
     configs_tree = @github_repository.branch_tree('github-classroom')
     GitHub::Errors.with_error_handling do
-      configs_tree.tree.each do |config|
+      sorted_configs(configs_tree.tree).each do |config|
         send("generate_#{config.path}", repo, config.sha) if CONFIGURABLES.include? config.path
       end
 
@@ -38,8 +38,48 @@ class ClassroomConfig
     GitHub::Errors.with_error_handling do
       @github_repository.tree(tree_sha).tree.each do |issue|
         blob = @github_repository.blob(issue.sha)
-        repo.add_issue(blob.data['title'], blob.body) if blob.data.present?
+
+        next if blob.data.blank?
+
+        issue = repo.add_issue(blob.data['title'], blob.body)
+        labels = blob.data['labels'] || []
+        repo.add_labels_to_issue(issue.number, labels)
       end
     end
+  end
+
+  # Internal: Generates labels for the assignment_repository based on the configs
+  #
+  # repo - GitHubRepository for which to perform the configuration
+  #                   setups
+  # tree_sha     - sha of the 'labels' tree
+  #
+  # Returns nothing
+  def generate_labels(repo, tree_sha)
+    GitHub::Errors.with_error_handling do
+      @github_repository.tree(tree_sha).tree.each do |label|
+        blob = @github_repository.blob(label.sha)
+
+        next if blob.data.blank?
+
+        color = blob.data['color'] || 'ffffff'
+        repo.add_label(blob.data['label'], color)
+      end
+    end
+  end
+
+  # Internal: Configuration priority
+  # 0 being highest priority
+  #
+  # Returns Hash of priorities
+  def priority
+    { 'labels' => 0, 'issues' => 1 }
+  end
+
+  # Internal: Sort the configs to be ordered by priority
+  #
+  # Returns a list of configs
+  def sorted_configs(tree)
+    tree.sort { |a, b| priority[a.path] <=> priority[b.path] }
   end
 end
