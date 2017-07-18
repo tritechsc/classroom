@@ -12,17 +12,22 @@ class ClassroomConfig
 
   def setup_repository(repo)
     configs_tree = @github_repository.branch_tree('github-classroom')
-    GitHub::Errors.with_error_handling do
-      sorted_configs(configs_tree.tree).each do |config|
-        send("generate_#{config.path}", repo, config.sha) if CONFIGURABLES.include? config.path
-      end
-
-      repo.remove_branch('github-classroom')
+    sorted_configs(configs_tree.tree).each do |config|
+      send("generate_#{config.path}", repo, config.sha) if CONFIGURABLES.include? config.path
     end
+
+    repo.remove_branch('github-classroom')
+    true
+  rescue GitHub::Error
+    false
   end
 
-  def finished_setup?(repo)
-    repo.branch_present? 'github-classroom'
+  def configurable?(repo)
+    repo.branch_present?('github-classroom')
+  end
+
+  def configured?(repo)
+    !configurable?(repo) && repo.import_progress[:status] == 'complete'
   end
 
   private
@@ -35,16 +40,14 @@ class ClassroomConfig
   #
   # Returns nothing
   def generate_issues(repo, tree_sha)
-    GitHub::Errors.with_error_handling do
-      @github_repository.tree(tree_sha).tree.each do |issue|
-        blob = @github_repository.blob(issue.sha)
+    @github_repository.tree(tree_sha).tree.each do |issue|
+      blob = @github_repository.blob(issue.sha)
 
-        next if blob.data.blank?
+      next if blob.data.blank?
 
-        issue = repo.add_issue(blob.data['title'], blob.body)
-        labels = blob.data['labels'] || []
-        repo.add_labels_to_issue(issue.number, labels)
-      end
+      issue = repo.add_issue(blob.data['title'], blob.body)
+      labels = blob.data['labels'] || []
+      repo.add_labels_to_issue(issue.number, labels)
     end
   end
 
@@ -56,15 +59,13 @@ class ClassroomConfig
   #
   # Returns nothing
   def generate_labels(repo, tree_sha)
-    GitHub::Errors.with_error_handling do
-      @github_repository.tree(tree_sha).tree.each do |label|
-        blob = @github_repository.blob(label.sha)
+    @github_repository.tree(tree_sha).tree.each do |label|
+      blob = @github_repository.blob(label.sha)
 
-        next if blob.data.blank?
+      next if blob.data.blank?
 
-        color = blob.data['color'] || 'ffffff'
-        repo.add_label(blob.data['label'], color)
-      end
+      color = blob.data['color'] || 'ffffff'
+      repo.add_label(blob.data['label'], color)
     end
   end
 

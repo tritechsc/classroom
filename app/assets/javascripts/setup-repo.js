@@ -85,12 +85,13 @@
     var progress_indicator = $('.setup-progress');
     var path = progress_path();
 
-    $.getJSON(path, function(data) {}).done(function(data){
+    $.ajax({type: "PATCH", url: path, data: {configure: configuring}}).done(function(data){
        display_progress(data);
        if (data.status == 'configuring' && !configuring) {
          configuring = true;
-         $.ajax({type: "PATCH", url: path, data: { configure: true }});
        }
+
+       setTimeout(check_progress, 3000);
      });
   };
 
@@ -98,14 +99,9 @@
     var setup_progress = $('.setup-progress');
     if(setup_progress.length != 0){
       configuring = false;
-      (function() {
-        var import_indicator = $('#import-progress');
-        indicate_in_progress(import_indicator);
-
-        setInterval(function(){
-          check_progress();
-        }, 3000);
-      })();
+      var import_indicator = $('#import-progress');
+      indicate_in_progress(import_indicator);
+      check_progress();
     };
   })
 
