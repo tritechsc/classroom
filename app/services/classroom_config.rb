@@ -12,7 +12,7 @@ class ClassroomConfig
 
   def setup_repository(repo)
     configs_tree = @github_repository.branch_tree("github-classroom")
-    configs_tree.tree.each do |config|
+    sorted_configs(configs_tree.tree).each do |config|
       send("generate_#{config.path}", repo, config.sha) if CONFIGURABLES.include? config.path
     end
 
