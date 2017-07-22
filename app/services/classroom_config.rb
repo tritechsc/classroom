@@ -6,28 +6,24 @@ class ClassroomConfig
   attr_reader :github_repository
 
   def initialize(github_repository)
-    raise ArgumentError, 'Invalid configuration repo' unless github_repository.branch_present? 'github-classroom'
+    raise ArgumentError, "Invalid configuration repo" unless github_repository.branch_present? "github-classroom"
     @github_repository = github_repository
   end
 
   def setup_repository(repo)
-    configs_tree = @github_repository.branch_tree('github-classroom')
-    sorted_configs(configs_tree.tree).each do |config|
+    configs_tree = @github_repository.branch_tree("github-classroom")
+    configs_tree.tree.each do |config|
       send("generate_#{config.path}", repo, config.sha) if CONFIGURABLES.include? config.path
     end
 
-    repo.remove_branch('github-classroom')
+    repo.remove_branch("github-classroom")
     true
   rescue GitHub::Error
     false
   end
 
   def configurable?(repo)
-    repo.branch_present?('github-classroom')
-  end
-
-  def configured?(repo)
-    !configurable?(repo) && repo.import_progress[:status] == 'complete'
+    repo.branch_present?("github-classroom")
   end
 
   private
@@ -36,7 +32,7 @@ class ClassroomConfig
   #
   # repo - GitHubRepository for which to perform the configuration
   #                   setups
-  # tree_sha     - sha of the 'issues' tree
+  # tree_sha     - sha of the "issues" tree
   #
   # Returns nothing
   def generate_issues(repo, tree_sha)
@@ -45,8 +41,8 @@ class ClassroomConfig
 
       next if blob.data.blank?
 
-      issue = repo.add_issue(blob.data['title'], blob.body)
-      labels = blob.data['labels'] || []
+      issue = repo.add_issue(blob.data["title"], blob.body)
+      labels = blob.data["labels"] || []
       repo.add_labels_to_issue(issue.number, labels)
     end
   end
@@ -55,7 +51,7 @@ class ClassroomConfig
   #
   # repo - GitHubRepository for which to perform the configuration
   #                   setups
-  # tree_sha     - sha of the 'labels' tree
+  # tree_sha     - sha of the "labels" tree
   #
   # Returns nothing
   def generate_labels(repo, tree_sha)
@@ -64,8 +60,8 @@ class ClassroomConfig
 
       next if blob.data.blank?
 
-      color = blob.data['color'] || 'ffffff'
-      repo.add_label(blob.data['label'], color)
+      color = blob.data["color"] || "ffffff"
+      repo.add_label(blob.data["label"], color)
     end
   end
 
@@ -74,7 +70,7 @@ class ClassroomConfig
   #
   # Returns Hash of priorities
   def priority
-    { 'labels' => 0, 'issues' => 1 }
+    { "labels" => 0, "issues" => 1 }
   end
 
   # Internal: Sort the configs to be ordered by priority

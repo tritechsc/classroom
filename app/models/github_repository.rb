@@ -46,7 +46,7 @@ class GitHubRepository < GitHubResource
   # color -  (defaults to: "ffffff")  A color, in hex, without the leading #
   #
   # Returns a Hash of the label, or raises a GitHub::Error.
-  def add_label(label, color = 'ffffff', options = {})
+  def add_label(label, color = "ffffff", options = {})
     GitHub::Errors.with_error_handling do
       @client.add_label(full_name, label, color, options)
     end
@@ -91,7 +91,7 @@ class GitHubRepository < GitHubResource
 
   # Public: Get a blob from the GitHub repository.
   #
-  # sha    - sha of the blob.
+  # sha    - The string sha value of the blob.
   #
   # Returns a GitHubBlob instance, or raises a GitHub::Error.
   def blob(sha, **options)

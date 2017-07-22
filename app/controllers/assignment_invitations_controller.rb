@@ -4,30 +4,44 @@ class AssignmentInvitationsController < ApplicationController
   include InvitationsControllerMethods
   include SetupRepo
 
-  before_action :check_user_not_previous_acceptee, only: [:show]
-  before_action :ensure_submission_repository_exists, only: [:success]
-  before_action :check_authorized_repo_setup, only: %i[setup setup_progress]
+  before_action :check_user_not_previous_acceptee, :check_should_redirect_to_roster_page, only: [:show]
+  before_action :ensure_submission_repository_exists, only: %i[setup setup_progress success]
+  before_action :ensure_authorized_repo_setup, only: %i[setup setup_progress]
 
   def accept
     create_submission do
-      redirect_to setup_assignment_invitation_path
+      if current_submission.assignment.starter_code_repo_id
+        redirect_to setup_assignment_invitation_path
+      else
+        redirect_to success_assignment_invitation_path
+      end
     end
   end
 
-  def setup
-    starter_code_repo_id = current_submission.assignment.starter_code_repo_id
-    redirect_to success_assignment_invitation_path unless starter_code_repo_id
-  end
+  def setup; end
 
   def setup_progress
     perform_setup(current_submission, classroom_config) if configurable_submission?
 
-    render json: setup_status(current_submission.github_repository, classroom_config)
+    render json: setup_status(current_submission)
   end
 
   def show; end
 
   def success; end
+
+  def join_roster
+    entry = RosterEntry.find(params[:roster_entry_id])
+
+    unless user_on_roster?
+      entry.user = current_user
+      entry.save
+    end
+
+    redirect_to assignment_invitation_url(current_invitation)
+  rescue ActiveRecord::ActiveRecordError
+    flash[:error] = "An error occured, please try again!"
+  end
 
   private
 
@@ -45,10 +59,13 @@ class AssignmentInvitationsController < ApplicationController
 
   def check_user_not_previous_acceptee
     return if current_submission.nil?
+    if repo_setup_enabled?
+      return redirect_to setup_assignment_invitation_path unless setup_status(current_submission)[:status] == :complete
+    end
     redirect_to success_assignment_invitation_path
   end
 
-  def check_authorized_repo_setup
+  def ensure_authorized_repo_setup
     redirect_to success_assignment_invitation_path unless repo_setup_enabled?
   end
 
@@ -61,9 +78,10 @@ class AssignmentInvitationsController < ApplicationController
   end
 
   def configurable_submission?
-    repo = current_submission.github_repository
-    configurable = classroom_config.configurable? repo
-    repo.import_progress[:status] == 'complete' && configurable && params[:configure]
+    repo             = current_submission.github_repository
+    import           = repo.import_progress[:status]
+    classroom_branch = repo.branch_present?("github-classroom")
+    import == "complete" && classroom_branch && current_submission.not_configured?
   end
 
   def create_submission
